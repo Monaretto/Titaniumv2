@@ -1,4 +1,5 @@
 #include "MemoryAreaDisplay.h"
+#include "MemoryUtils.h"
 #include "string.h"
 
 // #include <freertos/task.h>
@@ -72,15 +73,17 @@ area_index_e MemoryAreaDisplay::GetAreaIndex(void){
  * @returns ESP_OK if the write operation is successful, otherwise an error code.
  */
 esp_err_t MemoryAreaDisplay::Write(uint8_t *pIn){
+    auto result = ESP_FAIL;
+
     if( this->mutex_ != NULL )
     {
         if(xSemaphoreTake( this->mutex_, portMAX_DELAY ))
         {
-            memcpy(this->data, pIn, this->size);
+            result = memcpy_s(this->data, pIn, this->size);
             xSemaphoreGive( this->mutex_ );
         }
     }
-    return ESP_OK;       
+    return result;       
 }
 
 
@@ -92,14 +95,16 @@ esp_err_t MemoryAreaDisplay::Write(uint8_t *pIn){
  * @returns ESP_OK if the read operation is successful, otherwise an error code.
  */
 esp_err_t MemoryAreaDisplay::Read(uint8_t *pOut){
+    auto result = ESP_FAIL;
+
     if( this->mutex_ != NULL )
     {
         if(xSemaphoreTake( this->mutex_, portMAX_DELAY ))
         {
-            memcpy(pOut, this->data, this->size);
+            result = memcpy_s(pOut, this->data, this->size);
             xSemaphoreGive( this->mutex_ );
         }
     }
 
-    return ESP_OK;      
+    return result;      
 }

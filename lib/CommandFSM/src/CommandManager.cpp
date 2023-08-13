@@ -1,5 +1,13 @@
 #include "CommandManager.h"
 
+/**
+ * The ExecuteCommand function executes a given command by calling its Setup, Loop, and Teardown
+ * functions based on the current command state.
+ * 
+ * @param command A pointer to an object implementing the ICommand interface.
+ * 
+ * @return a boolean value.
+ */
 bool CommandManager::ExecuteCommand(ICommand *command)
 {
     bool ret = false;
