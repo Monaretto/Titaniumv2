@@ -1,6 +1,8 @@
 #include "SerialDriverManager.h"
 #include "MemoryManager.h"
 
+#include "SerialProtocol.h"
+
 /**
  * Executes the SerialDriverManager.
  *
@@ -14,17 +16,47 @@
 void SerialDriverManager::Execute(void)
 {
     auto memory_manager = MemoryManager::GetInstance();
+    auto serial_protocol = SerialProtocol();
+
+    uint8_t ACK_OK[7] = {0x41, 0x43, 0x4B, 0x4F, 0x4B, 0x00, 0x00};
+    uint8_t ACK_NOK[8] = {0x41, 0x43, 0x4B, 0x4E, 0x4F, 0x4B, 0x00, 0x00};
 
     if (this->Initialize_() != ESP_OK){
         vTaskDelete(this->process_handler);
     }
 
     while(1){
-        //This is a workaround, related to #10
-        int len = uart_read_bytes(UART_NUM_0, this->input_buffer_, this->buffer_size_, pdMS_TO_TICKS(200));
-        if (len == 1024){
-            memory_manager->Write(DISPLAY_AREA, 1024, this->input_buffer_);
+        auto len = uart_read_bytes(UART_NUM_0, this->input_buffer_, this->buffer_size_, pdMS_TO_TICKS(200));
+
+        if (len == 0){
+            continue;
         }
+        auto result = serial_protocol.ProcessIncomingMessage(this->input_buffer_, len);
+        
+        if (result == ESP_OK){
+            auto message = serial_protocol.GetMessage();
+
+            result = memory_manager->Write(
+                static_cast<area_index_e>(message.memory_area),
+                message.data_length,
+                message.data_pointer
+            );
+
+            
+            //workaround
+            ACK_OK[5] = (result & 0xFF) + 0x30;
+            ACK_OK[6] = ((result >> 8) & 0xFF) + 0x30;
+
+            uart_write_bytes(UART_NUM_0, ACK_OK , sizeof(ACK_OK));
+        }
+        else
+        {
+            //workaround
+            ACK_NOK[6] = (result & 0xFF) + 0x30;
+            ACK_NOK[7] = ((result >> 8) & 0xFF) + 0x30;
+            uart_write_bytes(UART_NUM_0, ACK_NOK , sizeof(ACK_NOK));
+        }
+
         vTaskDelay(pdMS_TO_TICKS(50));
     }
 }

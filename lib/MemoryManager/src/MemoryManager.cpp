@@ -34,26 +34,23 @@ esp_err_t MemoryManager::Write(area_index_e area_index, uint32_t size, uint8_t *
     do 
     {
         if (pIn == nullptr){
-            printf("pIn is a null pointer! \n");
+            result = ESP_ERR_NO_MEM;
             break;
         }
         if (area_index > AREAS_COUNT){
-            printf("Area index is greater than expected! \n");
+            result = ESP_ERR_INVALID_ARG;
             break;
         }
-        
         if (this->memory_area_array[area_index]->GetAccess() == READ_ONLY){
-            printf("Area memory is read-only type! \n");
+            result = ESP_ERR_INVALID_STATE;
             break;
         }
         if (this->memory_area_array[area_index]->GetSize() != size){
-            printf("Area size different than expected on Write: %ld != %ld! \n", this->memory_area_array[area_index]->GetSize(), size);
+            result = ESP_ERR_INVALID_SIZE;
             break;
         }
 
-        this->memory_area_array[area_index]->Write(pIn);
-
-        result = ESP_OK;
+        result = this->memory_area_array[area_index]->Write(pIn);
 
     }while (0);
 
@@ -75,25 +72,22 @@ esp_err_t MemoryManager::Read(area_index_e area_index, uint32_t size, uint8_t *p
     do 
     {
         if (pOut == nullptr){
-            printf("pOut is a null pointer! \n");
+            result = ESP_ERR_NO_MEM;
             break;
         }
         if (area_index > AREAS_COUNT){
-            printf("Area index is greater than expected! \n");
+            result = ESP_ERR_INVALID_ARG;
             break;
         }
-
         if (this->memory_area_array[area_index]->GetAccess() == WRITE_ONLY){
-            printf("Area memory is write-only type! \n");
+            result = ESP_ERR_INVALID_STATE;
             break;
         }
         if (this->memory_area_array[area_index]->GetSize() != size){
-            printf("Area size different than expected on Read: %ld != %ld! \n", this->memory_area_array[area_index]->GetSize(), size);
+            result = ESP_ERR_INVALID_SIZE;
             break;
         }
-        this->memory_area_array[area_index]->Read(pOut);
-
-        result = ESP_OK;
+        result = this->memory_area_array[area_index]->Read(pOut);
 
     }while (0);
 

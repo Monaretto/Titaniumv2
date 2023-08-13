@@ -12,7 +12,6 @@ class MemoryManager{
     public:
     MemoryManager(const MemoryManager& obj) = delete;
 
-
     esp_err_t Initialize(void);
     esp_err_t Write(area_index_e area_index, uint32_t size, uint8_t *pIn);
     esp_err_t Read(area_index_e area_index, uint32_t size, uint8_t *pOut);
