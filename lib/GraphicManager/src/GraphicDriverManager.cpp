@@ -17,9 +17,9 @@ void GraphicDriverManager::Execute(void)
 
     if (driver->Initialize() != ESP_OK)
     {
-        gpio_reset_pin(GPIO_NUM_25);
-        gpio_set_direction(GPIO_NUM_25, GPIO_MODE_OUTPUT);
-        gpio_set_level(GPIO_NUM_25, 1);
+        // gpio_reset_pin(GPIO_NUM_25);
+        // gpio_set_direction(GPIO_NUM_25, GPIO_MODE_OUTPUT);
+        // gpio_set_level(GPIO_NUM_25, 1);
         return;
     }
 
