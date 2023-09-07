@@ -1,5 +1,8 @@
 #include "MemoryManager.h"
 #include "./MemoryAreas/src/MemoryAreaDisplay.h"
+#include "./MemoryAreas/src/MemoryAreaSSID.h"
+#include "./MemoryAreas/src/MemoryAreaPassword.h"
+#include "./MemoryAreas/src/MemoryAreaConnection.h"
 #include "string.h"
 #include <cstdio>
 
@@ -10,6 +13,9 @@
  */
 esp_err_t MemoryManager::Initialize(void){
     this->memory_area_array[0] = new MemoryAreaDisplay;
+    this->memory_area_array[1] = new MemoryAreaSSID;
+    this->memory_area_array[2] = new MemoryAreaPassword;
+    this->memory_area_array[3] = new MemoryAreaConnection;
     for (int i = 0; i < AREAS_COUNT; i++){
         this->memory_area_array[i]->Initialize();
     }

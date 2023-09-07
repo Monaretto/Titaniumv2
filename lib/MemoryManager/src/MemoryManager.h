@@ -1,6 +1,6 @@
 #include "stdint.h"
 #include "esp_err.h"
-#include "./MemoryAreas/IMemoryArea.h"
+#include "./MemoryAreas/MemoryAreaTemplate.h"
 
 #ifndef MEMORY_MANAGER_GUARD
 #define MEMORY_MANAGER_GUARD
@@ -15,7 +15,7 @@ class MemoryManager{
     esp_err_t Initialize(void);
     esp_err_t Write(area_index_e area_index, uint32_t size, uint8_t *pIn);
     esp_err_t Read(area_index_e area_index, uint32_t size, uint8_t *pOut);
-    IMemoryArea* memory_area_array[1];
+    MemoryAreaTemplate* memory_area_array[1];
     static MemoryManager* GetInstance(void);
     private:
     MemoryManager(){};

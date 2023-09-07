@@ -36,7 +36,7 @@ void test_MemoryCopyWithNullStart() {
     uint8_t test_bytes[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00};
     uint8_t test_bytes_expected[] = {0x02, 0x05, 0x00,'W', 0x01, 'L', 'U', 'C', 'A', 'S'};
     TEST_ASSERT_EQUAL(memcpy_s(test_bytes, NULL, buffer_size), ESP_ERR_NO_MEM);
-    // TEST_ASSERT_EQUAL(memcpy_s(NULL, test_bytes_expected, buffer_size), ESP_ERR_NO_MEM);
+    TEST_ASSERT_EQUAL(memcpy_s(NULL, test_bytes_expected, buffer_size), ESP_ERR_NO_MEM);
 }
 
 void test_MemorySetOK() {
@@ -72,7 +72,7 @@ void main_test(void) {
     RUN_TEST(test_MemoryCopyWithNullStart);
     RUN_TEST(test_MemorySetOK);
     RUN_TEST(test_MemorySetSizeZero);
-    // RUN_TEST(test_MemorySetWithNullStart);
+    RUN_TEST(test_MemorySetWithNullStart);
 
     UNITY_END();
 }
