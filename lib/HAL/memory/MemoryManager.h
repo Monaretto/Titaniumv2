@@ -17,6 +17,7 @@ class MemoryManager{
     esp_err_t Read(area_index_e area_index, uint16_t *size_pointer, uint8_t *pOut);
     bool      IsAreaDataNew(area_index_e area_index);
     static MemoryManager* GetInstance(void);
+    
     private:
     MemoryManager(){};
     uint8_t memory_area_array_size;
