@@ -2,6 +2,7 @@
 #define NETWORK_MANAGER_GUARD
 
 #include "ProcessTemplate.h"
+#include "MemoryManager.h"
 
 #include "esp_wifi.h"
 #include "esp_err.h"
@@ -20,11 +21,19 @@ class NetworkManager : public ProcessTemplate{
     esp_err_t Initialize_(void);
     esp_err_t ConnectWiFi_(void);
     esp_err_t RegisterWiFiEvents_(void);
+    esp_err_t InitializeAP_(void);
+    esp_err_t InitializeSTA_(void);
+    esp_err_t ChangeConnectionMode_(void);
+    esp_err_t CleanUpConnection_(void);
 
     private:
     esp_netif_t* esp_netif_pointer_ = nullptr;
     TaskHandle_t process_handler = NULL;
     uint8_t connected_ = 0;
+    uint8_t last_connected_ = 0;
+    wifi_mode_t connection_mode_= WIFI_MODE_AP;
+    wifi_mode_t last_connection_mode_ = WIFI_MODE_NULL;
+    MemoryManager* memory_manager_ = NULL;
 };
 
 #endif /* NETWORK_MANAGER_GUARD */
