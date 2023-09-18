@@ -7,7 +7,32 @@
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
-static const char *TAG = "wifi softAP";
+
+#include "HTTPManager.h"
+#include "esp_netif.h"
+#include "esp_wifi.h"
+static const char *TAG = "SoftAP";
+
+/**
+ * The function "event_handler" handles events related to WiFi and IP connections and updates the WiFi
+ * connection status accordingly.
+ * 
+ * @param arg The "arg" parameter is a void pointer that can be used to pass any additional data or
+ * objects to the event handler function. In this case, it is being used to pass a pointer to a
+ * NetworkManager object.
+ * @param event_base The event base is the base type of the event being handled. In this case, it can
+ * be either WIFI_EVENT or IP_EVENT. These are event bases defined by the ESP-IDF framework for WiFi
+ * and IP events, respectively.
+ * @param event_id The event_id parameter represents the specific event that occurred. It is an integer
+ * value that identifies the type of event that triggered the event handler.
+ * @param event_data The event_data parameter is a pointer to the data associated with the event. The
+ * type of data depends on the event_id and event_base. In this case, it is not specified what type of
+ * data is expected for each event, so you would need to refer to the documentation or implementation
+ * of the event
+ * 
+ * @return In the event_handler function, if the event_base is neither WIFI_EVENT nor IP_EVENT, the
+ * function will return without performing any further actions.
+ */
 static void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
@@ -25,6 +50,16 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         case IP_EVENT_STA_GOT_IP:
             network_pointer_object->SetWiFiConnection_(true);
         break;
+        case WIFI_EVENT_AP_START :
+        {
+            esp_netif_ip_info_t ip_info;
+            // Get the IP information for the SoftAP interface
+            esp_netif_get_ip_info(esp_netif_get_handle_from_ifkey("WIFI_AP_DEF"), &ip_info);
+
+            // Print the IP address of the SoftAP
+            ESP_LOGI(TAG, "SoftAP IP Address: " IPSTR, IP2STR(&ip_info.ip));
+            break;
+        }
         default:
         break;
     }
@@ -33,7 +68,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
 /**
  * The function initializes the network manager by configuring the Wi-Fi settings.
  * 
- * @return an `esp_err_t` value, which is the result of the initialization process.
+ * @return an 'esp_err_t' value, which is the result of the initialization process.
  */
 esp_err_t NetworkManager::Initialize_(void){
     esp_err_t result = ESP_OK;
@@ -41,6 +76,7 @@ esp_err_t NetworkManager::Initialize_(void){
 
     result += esp_netif_init();
     result += esp_event_loop_create_default();
+    
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     result += esp_wifi_init(&cfg);
@@ -53,7 +89,7 @@ esp_err_t NetworkManager::Initialize_(void){
 }
 
 /**
- * The function `Execute` runs an infinite loop with a delay of 50 milliseconds.
+ * The function 'Execute' runs an infinite loop with a delay of 50 milliseconds.
  */
 void NetworkManager::Execute(void){
     this->Initialize_();
@@ -73,8 +109,8 @@ void NetworkManager::Execute(void){
 }
 
 /**
- * The function `ChangeConnectionMode_` initializes the network connection mode based on the current
- * mode set in `connection_mode_`.
+ * The function 'ChangeConnectionMode_' initializes the network connection mode based on the current
+ * mode set in 'connection_mode_'.
  * 
  * @return an esp_err_t, which is a type defined in the ESP-IDF framework for error codes.
  */
@@ -85,6 +121,8 @@ esp_err_t NetworkManager::ChangeConnectionMode_(void){
         result = this->InitializeSTA_();
     } else if (this->connection_mode_ == WIFI_MODE_AP){
         result = this->InitializeAP_();
+        auto http_manager = HTTPManager::GetInstance();
+        http_manager->StartHTTPServer();
     }
 
     return result;
@@ -157,7 +195,7 @@ esp_err_t NetworkManager::InitializeSTA_(void){
 }
 
 /**
- * The function `CleanUpConnection_` disconnects from the Wi-Fi network, stops the Wi-Fi module, and
+ * The function 'CleanUpConnection_' disconnects from the Wi-Fi network, stops the Wi-Fi module, and
  * sets the Wi-Fi mode to NULL.
  * 
  * @return an esp_err_t, which is a type defined in the ESP-IDF framework for error handling.
@@ -174,7 +212,7 @@ esp_err_t NetworkManager::CleanUpConnection_(void){
 
 
 /**
- * The function `RegisterWiFiEvents_` registers event handlers for WiFi and IP events.
+ * The function 'RegisterWiFiEvents_' registers event handlers for WiFi and IP events.
  * 
  * @return an esp_err_t, which is a type defined in the ESP-IDF framework for error handling.
  */

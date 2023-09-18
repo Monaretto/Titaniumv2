@@ -106,11 +106,11 @@ esp_err_t MemoryManager::Read(area_index_e area_index, uint32_t size, uint8_t *p
  * @return MemoryManager* 
  */
 MemoryManager* MemoryManager::GetInstance(void)
-  {
+{
     if (singleton_pointer_ == nullptr)
     {
-      singleton_pointer_ = new MemoryManager();
+        singleton_pointer_ = new MemoryManager();
     }
 
     return singleton_pointer_;
-  }
+}

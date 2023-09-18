@@ -17,6 +17,7 @@ class MemoryManager{
     esp_err_t Read(area_index_e area_index, uint32_t size, uint8_t *pOut);
     MemoryAreaTemplate* memory_area_array[1];
     static MemoryManager* GetInstance(void);
+    
     private:
     MemoryManager(){};
     uint8_t memory_area_array_size;
