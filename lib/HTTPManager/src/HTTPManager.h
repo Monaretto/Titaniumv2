@@ -2,6 +2,7 @@
 #define HTTP_MANAGER_GUARD
 
 #include "MemoryManager.h"
+#include "ProcessTemplate.h"
 
 #include "esp_http_server.h"
 #include "esp_err.h"
@@ -9,27 +10,25 @@
 /**
  * A class that manages the HTTP connections.
  */
-class HTTPManager{
+class HTTPManager : public ProcessTemplate{
     public:
-    HTTPManager(const HTTPManager& obj) = delete;
-    esp_err_t Initialize(void);
-    esp_err_t StartHTTPServer(void);
-    esp_err_t StopHTTPServer(void);
+    HTTPManager() : ProcessTemplate(this, "HTTP Proccess", 1024, 1, &this->process_handler) { };
     
     public:
-    static HTTPManager* GetInstance(void);
+    void Execute(void);
 
     private:
-    void InitializeRequestList_(void);
+    esp_err_t Initialize_(void);
+    esp_err_t StartHTTPServer(void);
+    esp_err_t StopHTTPServer(void);
     esp_err_t ReadFilesFromSPIFFS_(void);
     esp_err_t RegisterHandlers_(void);
-    HTTPManager(){};
+    void      InitializeRequestList_(void);
 
     private:
     static constexpr uint8_t maximum_requests_list_size = 2;
     static constexpr uint16_t html_page_maximum_size = 4096;
     static constexpr uint16_t css_styles_maximum_size = 2048;
-    static HTTPManager* singleton_pointer_;
 
     private:
     httpd_uri_t http_requests_list_[maximum_requests_list_size];
@@ -37,6 +36,8 @@ class HTTPManager{
     uint8_t css_styles_[css_styles_maximum_size];
     httpd_handle_t server_ = NULL;
     httpd_config_t config_;
+    TaskHandle_t process_handler = NULL;
+    MemoryManager* memory_manager_ = NULL;
 };
 
 #endif /* HTTP_MANAGER_GUARD */

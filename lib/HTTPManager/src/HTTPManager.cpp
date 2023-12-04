@@ -18,12 +18,31 @@ esp_err_t RequestHandler(httpd_req_t *req)
     return ESP_OK;
 }
 
-// esp_err_t send_css(httpd_req_t *req)
-// {
-//     httpd_resp_set_type(req, "text/css");
-//     httpd_resp_send(req, (const char *)req->user_ctx, HTTPD_RESP_USE_STRLEN);
-//     return ESP_OK;
-// }
+/**
+ * The function 'Execute' runs an infinite loop with a delay of 1000 milliseconds.
+ */
+void HTTPManager::Execute(void){
+    uint8_t connection_status = NOT_CONNECTED;
+    
+    this->Initialize_();
+    
+    while(1){
+        this->memory_manager_->Read(CONNECTION_AREA, sizeof(connection_status), &connection_status);
+
+        if (this->last_status != connection_status){
+            if (connection_status == NOT_CONNECTED){
+                this->StopHTTPServer();
+            }
+            else if (connection_status == CONNECTED){
+                this->StartHTTPServer();
+            }
+
+            this->last_status = connection_status;
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
 
 /**
  * The function initializes the HTTPManager by reading files from SPIFFS and initializing the request
@@ -31,11 +50,12 @@ esp_err_t RequestHandler(httpd_req_t *req)
  * 
  * @return an 'esp_err_t' value.
  */
-esp_err_t HTTPManager::Initialize(void)
+esp_err_t HTTPManager::Initialize_(void)
 {
     auto result = ESP_OK;
 
     this->config_ = HTTPD_DEFAULT_CONFIG();
+    this->memory_manager_ = MemoryManager::GetInstance();
 
     result += this->ReadFilesFromSPIFFS_();
     this->InitializeRequestList_();
@@ -131,19 +151,4 @@ esp_err_t HTTPManager::RegisterHandlers_(void){
     }
 
     return result;
-}
-
-/**
- * @brief Returns the singleton instance
- * 
- * @return HTTPManager* 
- */
-HTTPManager* HTTPManager::GetInstance(void)
-{
-    if (singleton_pointer_ == nullptr)
-    {
-        singleton_pointer_ = new HTTPManager();
-    }
-
-    return singleton_pointer_;
 }

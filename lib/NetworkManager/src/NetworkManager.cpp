@@ -44,11 +44,11 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     switch (event_id){
         case WIFI_EVENT_STA_START:
         case WIFI_EVENT_STA_DISCONNECTED:
-            network_pointer_object->SetWiFiConnection_(false);
+            network_pointer_object->SetWiFiConnection_(NOT_CONNECTED);
             network_pointer_object->result = esp_wifi_connect();
         break;
         case IP_EVENT_STA_GOT_IP:
-            network_pointer_object->SetWiFiConnection_(true);
+            network_pointer_object->SetWiFiConnection_(CONNECTED);
         break;
         case WIFI_EVENT_AP_START :
         {
@@ -92,18 +92,29 @@ esp_err_t NetworkManager::Initialize_(void){
  * The function 'Execute' runs an infinite loop with a delay of 50 milliseconds.
  */
 void NetworkManager::Execute(void){
+    bool need_update = false;
+
     this->Initialize_();
 
     while(1){
         if (this->last_connection_mode_ != this->connection_mode_){
             this->CleanUpConnection_();
             this->ChangeConnectionMode_();
+
+            need_update = true;
         }
 
         if (this->last_connected_ != this->connected_){
-            this->memory_manager_->Write(CONNECTION_AREA, sizeof(this->connected_), &this->connected_);
             this->last_connected_ = this->connected_;
+
+            need_update = true;
         }
+
+        if (need_update){
+            memory_manager_->Write(CONNECTION_AREA, sizeof(this->connected_), &this->connected_);
+            need_update = false;
+        }
+
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -121,8 +132,8 @@ esp_err_t NetworkManager::ChangeConnectionMode_(void){
         result = this->InitializeSTA_();
     } else if (this->connection_mode_ == WIFI_MODE_AP){
         result = this->InitializeAP_();
-        auto http_manager = HTTPManager::GetInstance();
-        http_manager->StartHTTPServer();
+        // auto http_manager = HTTPManager::GetInstance();
+        // http_manager->StartHTTPServer();
     }
 
     return result;
@@ -153,7 +164,6 @@ esp_err_t NetworkManager::InitializeAP_(void){
 
 
     result += esp_wifi_set_mode(WIFI_MODE_AP);
-    // ESP_ERROR_CHECK_WITHOUT_ABORT(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
     result += esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
     result += esp_wifi_start();
 
