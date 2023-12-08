@@ -69,7 +69,7 @@ esp_err_t HTTPManager::Initialize_(void)
  * 
  * @return an `esp_err_t` value.
  */
-esp_err_t HTTPManager::StartHTTPServer(void){
+esp_err_t HTTPManager::StartHTTPServer_(void){
     auto result = ESP_OK;
 
     if (httpd_start(&this->server_, &this->config_) == ESP_OK)
@@ -85,7 +85,7 @@ esp_err_t HTTPManager::StartHTTPServer(void){
  * 
  * @return an esp_err_t, which is a type defined in the ESP-IDF framework for error handling.
  */
-esp_err_t HTTPManager::StopHTTPServer(void){
+esp_err_t HTTPManager::StopHTTPServer_(void){
 
     return httpd_stop(&this->server_);
 }

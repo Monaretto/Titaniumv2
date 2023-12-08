@@ -19,8 +19,8 @@ class HTTPManager : public ProcessTemplate{
 
     private:
     esp_err_t Initialize_(void);
-    esp_err_t StartHTTPServer(void);
-    esp_err_t StopHTTPServer(void);
+    esp_err_t StartHTTPServer_(void);
+    esp_err_t StopHTTPServer_(void);
     esp_err_t ReadFilesFromSPIFFS_(void);
     esp_err_t RegisterHandlers_(void);
     void      InitializeRequestList_(void);

@@ -27,19 +27,19 @@ int main(void)
 
   auto memory_manager = MemoryManager::GetInstance();
   auto file_system_manager = FileSystemManager::GetInstance();
-  auto http_manager = HTTPManager::GetInstance();
 
+  auto http_manager = new HTTPManager;
   auto graphic_manager = new GraphicDriverManager;
   auto network_manager = new NetworkManager;
   auto serial_manager = new SerialDriverManager;
   
   memory_manager->Initialize();
   file_system_manager->Initialize();
-  http_manager->Initialize();
 
+  serial_manager->InitializeProcess();
   graphic_manager->InitializeProcess();
   network_manager->InitializeProcess();
-  serial_manager->InitializeProcess();
+  http_manager->InitializeProcess();
   
 
   return 0;
