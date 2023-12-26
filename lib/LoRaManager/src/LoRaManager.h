@@ -5,8 +5,20 @@
 #include "esp_err.h"
 
 #include "ProcessTemplate.h"
-#include "MemoryManager.h"
+#include "memory/MemoryManager.h"
 #include "Driver/LoRaDriver.h"
+
+namespace Regions {
+    constexpr uint32_t EUROPE    = 868e6;
+    constexpr uint32_t US        = 915e6;
+    constexpr uint32_t ASIA      = 920e6;
+    constexpr uint32_t AUSTRALIA = 915e6;
+    constexpr uint32_t CHINA     = 782e6;
+    constexpr uint32_t INDIA     = 866e6;
+    constexpr uint32_t KOREA     = 920e6;
+    constexpr uint32_t JAPAN     = 920e6;
+    constexpr uint32_t BRAZIL    = 915e6;
+}
 
 /**
  * Manages LoRa communication.

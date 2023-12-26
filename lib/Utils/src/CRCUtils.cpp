@@ -1,5 +1,13 @@
 #include "CRCUtils.h"
 
+/**
+ * @brief Lookup table for CRC32 calculation.
+ *
+ * This lookup table is used for CRC32 calculation.
+ *
+ * @param index The index used to retrieve the corresponding CRC32 value.
+ * @return The CRC32 value for the given index.
+ */
 static uint32_t CRCTable(uint32_t index) {
   const uint32_t crc32_tab[] = {
       0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL, 0x076dc419L,
@@ -58,6 +66,15 @@ static uint32_t CRCTable(uint32_t index) {
   return crc32_tab[index];
 }
 
+/**
+ * @brief Calculates CRC32 for a given array of bytes.
+ *
+ * This function calculates the CRC32 checksum for the given array of bytes.
+ *
+ * @param initial_byte_address A pointer to the initial byte of the array.
+ * @param size The size of the array in bytes.
+ * @return The calculated CRC32 checksum.
+ */
 uint32_t CalculatedCRC32(uint8_t *initial_byte_address, uint32_t size){
     uint32_t crc32val = 0;
     crc32val ^= 0xFFFFFFFF;

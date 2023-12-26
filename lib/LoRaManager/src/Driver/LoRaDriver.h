@@ -1,7 +1,7 @@
 
 #include "esp_err.h"
 
-#include "SPIManager.h"
+#include "spi/SPIManager.h"
 
 namespace CRCMode {
     constexpr uint8_t ENABLE = 0x00;

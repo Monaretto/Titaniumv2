@@ -1,5 +1,5 @@
 #include "NetworkManager.h"
-#include "MemoryManager.h"
+#include "memory/MemoryManager.h"
 #include "esp_system.h"
 
 #include "esp_event.h"
@@ -31,9 +31,12 @@ static void event_handler(void* arg, esp_event_base_t event_base,
 }
 
 /**
- * The function initializes the network manager by configuring the Wi-Fi settings.
- * 
- * @return an `esp_err_t` value, which is the result of the initialization process.
+ * @brief Initializes the network manager by configuring the Wi-Fi settings.
+ *
+ * This function initializes the network manager by setting up Wi-Fi, registering event handlers,
+ * and connecting to a Wi-Fi network using the credentials stored in the memory manager.
+ *
+ * @return An `esp_err_t` value, which is the result of the initialization process.
  */
 esp_err_t NetworkManager::Initialize_(void){
     esp_err_t result = ESP_OK;
@@ -66,7 +69,10 @@ esp_err_t NetworkManager::Initialize_(void){
 }
 
 /**
- * The function `Execute` runs an infinite loop with a delay of 50 milliseconds.
+ * @brief Executes the network manager functionality in an infinite loop.
+ *
+ * This function runs an infinite loop with a delay of 50 milliseconds. It initializes the network,
+ * and writes the connection status to the memory manager at regular intervals.
  */
 void NetworkManager::Execute(void){
     auto memory_manager = MemoryManager::GetInstance();
@@ -80,9 +86,11 @@ void NetworkManager::Execute(void){
 }
 
 /**
- * The function `RegisterWiFiEvents_` registers event handlers for WiFi and IP events.
- * 
- * @return an esp_err_t, which is a type defined in the ESP-IDF framework for error handling.
+ * @brief Registers WiFi and IP event handlers.
+ *
+ * This function registers event handlers for WiFi and IP events to handle connection events.
+ *
+ * @return An `esp_err_t`, which is a type defined in the ESP-IDF framework for error handling.
  */
 esp_err_t NetworkManager::RegisterWiFiEvents_(void){
     esp_err_t result = ESP_OK;
@@ -105,10 +113,11 @@ esp_err_t NetworkManager::RegisterWiFiEvents_(void){
 }
 
 /**
- * The function sets the status of the WiFi connection.
- * 
- * @param status The status parameter is a boolean value that represents the desired connection status
- * of the WiFi network.
+ * @brief Sets the status of the WiFi connection.
+ *
+ * This function sets the status of the WiFi connection based on the provided status parameter.
+ *
+ * @param status A boolean value that represents the desired connection status of the WiFi network.
  */
 void NetworkManager::SetWiFiConnection_(uint8_t status){
     this->connected_ = status;

@@ -1,6 +1,6 @@
 #include "LoRaDriver.h"
 
-#include "GPIOManager.h"
+#include "gpio/GPIOManager.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -58,11 +58,19 @@ namespace IRQ {
     constexpr uint8_t RX_DONE_MASK = 0x40;
 }
 
-namespace Driver{
+namespace Driver {
     constexpr uint8_t VERSION = 0x12;
     constexpr uint8_t WRITE_COMMAND = 0x80;
 }
 
+/**
+ * @brief Initializes the LoRa driver.
+ *
+ * This function initializes the LoRa driver by configuring SPI and GPIO managers,
+ * performing a reset, validating the version, and setting initial configuration.
+ *
+ * @return ESP_OK if initialization is successful, otherwise an error code.
+ */
 esp_err_t LoRaDriver::Initialize(void){
     auto result = ESP_OK;
 
@@ -87,6 +95,12 @@ esp_err_t LoRaDriver::Initialize(void){
     return result;
 }
 
+
+/**
+ * @brief Resets the LoRa transceiver.
+ *
+ * This function resets the LoRa transceiver by toggling the reset pin.
+ */
 void LoRaDriver::Reset(void){
     gpio_manager->WriteGPIO(LORA_RST, LOW);
     vTaskDelay(pdMS_TO_TICKS(10));
@@ -94,11 +108,27 @@ void LoRaDriver::Reset(void){
     vTaskDelay(pdMS_TO_TICKS(10));
 }
 
+/**
+ * @brief Sets the LoRa transceiver to explicit header mode.
+ *
+ * This function sets the transceiver to explicit header mode by updating the MODEM_CONFIG_1 register.
+ * 
+ * @see SetImplicitHeaderMode
+ */
 void LoRaDriver::SetExplicitHeaderMode(void){
     this->implicit_ = false;
     this->WriteRegister(Registers::MODEM_CONFIG_1, this->ReadRegister(Registers::MODEM_CONFIG_1) & 0xfe);
 }
 
+/**
+ * @brief Sets the LoRa transceiver to implicit header mode with a specified payload size.
+ *
+ * This function sets the transceiver to implicit header mode by updating the MODEM_CONFIG_1 register
+ * and also sets the payload length.
+ * 
+ * @param[in] size Size of the payload in implicit header mode.
+ * @see SetExplicitHeaderMode
+ */
 void LoRaDriver::SetImplicitHeaderMode(uint8_t size)
 {
    this->implicit_ = true;
@@ -106,14 +136,36 @@ void LoRaDriver::SetImplicitHeaderMode(uint8_t size)
    this->WriteRegister(Registers::PAYLOAD_LENGTH, size);
 }
 
+/**
+ * @brief Sets the LoRa transceiver to sleep mode.
+ *
+ * This function sets the transceiver to sleep mode by updating the OP_MODE register.
+ * 
+ * @see SetIdleMode
+ */
 void LoRaDriver::SetSleepMode(void){ 
    this->WriteRegister(Registers::OP_MODE, TransceiverModes::LONG_RANGE_MODE | TransceiverModes::SLEEP);
 }
 
+/**
+ * @brief Sets the LoRa transceiver to idle mode.
+ *
+ * This function sets the transceiver to idle mode by updating the OP_MODE register.
+ * 
+ * @see SetSleepMode
+ */
 void LoRaDriver::SetIdleMode(void){ 
    this->WriteRegister(Registers::OP_MODE, TransceiverModes::LONG_RANGE_MODE | TransceiverModes::STDBY);
 }
 
+/**
+ * @brief Sets the LoRa transceiver to continuous receiver mode.
+ *
+ * This function sets the transceiver to continuous receiver mode by updating the OP_MODE register.
+ * If the receiver mode was not set before, it sets the internal flag.
+ * 
+ * @see SetIdleMode
+ */
 void LoRaDriver::SetReceiverMode(void)
 {
     this->WriteRegister(Registers::OP_MODE, TransceiverModes::LONG_RANGE_MODE | TransceiverModes::RX_CONTINUOUS);
@@ -122,6 +174,14 @@ void LoRaDriver::SetReceiverMode(void)
     }
 }
 
+/**
+ * @brief Sets the transmit power of the LoRa transceiver.
+ *
+ * This function sets the transmit power by updating the PA_CONFIG register.
+ * The transmit power level is clamped to the range [2, 17].
+ * 
+ * @param[in] level Transmit power level.
+ */
 void LoRaDriver::SetTxPower(uint8_t level)
 {
     if (level < 2){
@@ -133,6 +193,13 @@ void LoRaDriver::SetTxPower(uint8_t level)
    this->WriteRegister(Registers::PA_CONFIG, PAConfiguration::PA_BOOST | (level - 2));
 }
 
+/**
+ * @brief Sets the frequency of the LoRa transceiver.
+ *
+ * This function sets the frequency by updating the FRF_MSB, FRF_MID, and FRF_LSB registers.
+ * 
+ * @param[in] frequency Desired frequency.
+ */
 void LoRaDriver::SetFrequency(uint32_t frequency)
 {
    this->frequency_ = frequency;
@@ -144,6 +211,16 @@ void LoRaDriver::SetFrequency(uint32_t frequency)
    this->WriteRegister(Registers::FRF_LSB, (uint8_t)(frf >> 0));
 }
 
+
+/**
+ * @brief Sets the spreading factor of the LoRa transceiver.
+ *
+ * This function sets the spreading factor by updating the MODEM_CONFIG_2 and
+ * MODEM_CONFIG_1 registers, along with configuring detection optimization
+ * and detection threshold.
+ * 
+ * @param[in] spreading_factor Desired spreading factor.
+ */
 void LoRaDriver::SetSpreadingFactor(uint8_t spreading_factor)
 {
     if (spreading_factor < 6) {
@@ -164,6 +241,13 @@ void LoRaDriver::SetSpreadingFactor(uint8_t spreading_factor)
    this->WriteRegister(Registers::MODEM_CONFIG_2, (this->ReadRegister(Registers::MODEM_CONFIG_2) & 0x0f) | ((spreading_factor << 4) & 0xf0));
 }
 
+/**
+ * @brief Sets the bandwidth of the LoRa transceiver.
+ *
+ * This function sets the bandwidth by updating the MODEM_CONFIG_1 register.
+ * 
+ * @param[in] bandwidth Desired bandwidth.
+ */
 void LoRaDriver::SetBandwidth(uint32_t bandwidth)
 {
     uint32_t bw;
@@ -201,6 +285,13 @@ void LoRaDriver::SetBandwidth(uint32_t bandwidth)
     this->WriteRegister(Registers::MODEM_CONFIG_1, (this->ReadRegister(Registers::MODEM_CONFIG_1) & 0x0f) | (bw << 4));
 }
 
+/**
+ * @brief Sets the coding rate denominator of the LoRa transceiver.
+ *
+ * This function sets the coding rate by updating the MODEM_CONFIG_1 register.
+ * 
+ * @param[in] denominator Desired coding rate denominator.
+ */
 void LoRaDriver::SetCodingRate(uint8_t denominator)
 {
     if (denominator < 5) {
@@ -214,16 +305,37 @@ void LoRaDriver::SetCodingRate(uint8_t denominator)
    this->WriteRegister(Registers::MODEM_CONFIG_1, (this->ReadRegister(Registers::MODEM_CONFIG_1) & 0xf1) | (cr << 1));
 }
 
+/**
+ * @brief Sets the preamble length of the LoRa transceiver.
+ *
+ * This function sets the preamble length by updating the PREAMBLE_MSB and PREAMBLE_LSB registers.
+ * 
+ * @param[in] length Desired preamble length.
+ */
 void LoRaDriver::SetPreambleLength(uint32_t length)
 {
    this->WriteRegister(Registers::PREAMBLE_MSB, (uint8_t)(length >> 8));
    this->WriteRegister(Registers::PREAMBLE_LSB, (uint8_t)(length >> 0));
 }
 
+/**
+ * @brief Sets the sync word of the LoRa transceiver.
+ *
+ * This function sets the sync word by updating the SYNC_WORD register.
+ * 
+ * @param[in] sync_word Desired sync word.
+ */
 void LoRaDriver::SetSyncWord(uint8_t sync_word){
    this->WriteRegister(Registers::SYNC_WORD, sync_word);
 }
 
+/**
+ * @brief Sets the CRC mode of the LoRa transceiver.
+ *
+ * This function sets the CRC mode by updating the MODEM_CONFIG_2 register.
+ * 
+ * @param[in] mode CRC mode to set (ENABLE or DISABLE).
+ */
 void LoRaDriver::SetCRCMode(uint8_t mode){
     if (mode == CRCMode::ENABLE){
         this->WriteRegister(Registers::MODEM_CONFIG_2, this->ReadRegister(Registers::MODEM_CONFIG_2) | 0x04);
@@ -233,6 +345,15 @@ void LoRaDriver::SetCRCMode(uint8_t mode){
     }
 }
 
+/**
+ * @brief Sends a packet using the LoRa transceiver.
+ *
+ * This function sends a packet by setting the transceiver to TX mode and
+ * waiting for the transmission to complete.
+ *
+ * @param[in] pOut Pointer to the data to be transmitted.
+ * @param[in] size Size of the data to be transmitted.
+ */
 void LoRaDriver::SendPacket(uint8_t *pOut, uint8_t size) {
 
     this->SetIdleMode();
@@ -250,6 +371,16 @@ void LoRaDriver::SendPacket(uint8_t *pOut, uint8_t size) {
     this->WriteRegister(Registers::IRQ_FLAGS, IRQ::TX_DONE_MASK);
 }
 
+/**
+ * @brief Receives a packet using the LoRa transceiver.
+ *
+ * This function receives a packet by checking the RX_DONE_MASK flag and reading
+ * the received data if no CRC error occurred.
+ *
+ * @param[out] pIn Pointer to the buffer where received data will be stored.
+ * @param[in] size Size of the buffer for received data.
+ * @return The length of the received data.
+ */
 uint8_t LoRaDriver::ReceivePacket(uint8_t *pIn, uint8_t size) {
     uint8_t len = 0;
 
@@ -278,20 +409,51 @@ uint8_t LoRaDriver::ReceivePacket(uint8_t *pIn, uint8_t size) {
     return len;
 }
 
+/**
+ * @brief Checks if there is data in the LoRa transceiver's receiver buffer.
+ *
+ * This function checks the RX_DONE_MASK flag to determine if there is data
+ * in the transceiver's receiver buffer.
+ *
+ * @return True if there is data in the receiver buffer, otherwise false.
+ */
 bool LoRaDriver::isDataInReceiver(void){
     if(this->ReadRegister(Registers::IRQ_FLAGS) & IRQ::RX_DONE_MASK)
         return true;
     return false;
 }
 
+/**
+ * @brief Gets the RSSI of the last received packet.
+ *
+ * This function calculates and returns the RSSI of the last received packet.
+ *
+ * @return The RSSI value.
+ */
 uint32_t LoRaDriver::GetLastPacketRSSI(void){
    return (this->ReadRegister(Registers::PKT_RSSI_VALUE) - (this->frequency_ < 868E6 ? 164 : 157));
 }
 
+/**
+ * @brief Gets the SNR of the last received packet.
+ *
+ * This function gets and returns the Signal-to-Noise Ratio (SNR) of the last received packet.
+ *
+ * @return The SNR value.
+ */
 uint8_t LoRaDriver::GetLastPacket4TSNR(void){
    return ((int8_t)this->ReadRegister(Registers::PKT_SNR_VALUE));
 }
 
+/**
+ * @brief Writes a value to a LoRa register.
+ *
+ * This function writes a value to the specified LoRa register.
+ *
+ * @param[in] register_address Address of the register to write to.
+ * @param[in] register_value Value to write to the register.
+ * @return ESP_OK if the write operation is successful, otherwise an error code.
+ */
 esp_err_t LoRaDriver::WriteRegister(uint8_t register_address, uint8_t register_value){
     uint8_t write_address = Driver::WRITE_COMMAND | register_address;
     uint8_t out[2] = { write_address, register_value};
@@ -300,6 +462,14 @@ esp_err_t LoRaDriver::WriteRegister(uint8_t register_address, uint8_t register_v
     return spi_manager->DeviceTransmit(out, in, sizeof(out));
 }
 
+/**
+ * @brief Reads a value from a LoRa register.
+ *
+ * This function reads a value from the specified LoRa register.
+ *
+ * @param[in] register_address Address of the register to read from.
+ * @return The value read from the register.
+ */
 uint32_t  LoRaDriver::ReadRegister(uint8_t register_address){
     uint8_t out[2] = {register_address, 0xff };
     uint8_t in[2] = {0};
@@ -309,6 +479,14 @@ uint32_t  LoRaDriver::ReadRegister(uint8_t register_address){
     return in[1];
 }
 
+/**
+ * @brief Validates the version of the LoRa transceiver.
+ *
+ * This function validates the version of the LoRa transceiver by comparing it
+ * with the expected version. Retries the validation up to five times.
+ *
+ * @return ESP_OK if the version is valid, otherwise an error code.
+ */
 esp_err_t LoRaDriver::ValidateVersion(void){
     auto result = ESP_FAIL;
     auto max_retires = 5;

@@ -1,12 +1,20 @@
 #include "LoRaManager.h"
 
+/**
+ * @brief Initializes the LoRaManager.
+ *
+ * This function initializes the MemoryManager, creates an instance of LoRaDriver,
+ * and configures the LoRa transceiver with specific settings.
+ *
+ * @return ESP_OK if initialization is successful, otherwise an error code.
+ */
 esp_err_t LoRaManager::Initialize_(void){
     esp_err_t result = ESP_OK;
 
     this->memory_manager = MemoryManager::GetInstance();
     this->lora_driver = new LoRaDriver();
     result += this->lora_driver->Initialize();
-    this->lora_driver->SetFrequency(915e6); // Change to namespace REGIONS::BRAZIL = 915e6
+    this->lora_driver->SetFrequency(Regions::BRAZIL);
     this->lora_driver->SetCRCMode(CRCMode::ENABLE);
     this->lora_driver->SetImplicitHeaderMode(64);
 
@@ -16,7 +24,13 @@ esp_err_t LoRaManager::Initialize_(void){
 }
 
 /**
- * The function `Execute` runs an infinite loop with a delay of 100 milliseconds.
+ * @brief Executes the LoRaManager functionality in an infinite loop.
+ *
+ * This function runs an infinite loop with a delay of 100 milliseconds. It checks if
+ * there is new data in the LORA_WRITE_AREA of the MemoryManager. If there is new data,
+ * it reads the data, sends a packet using the LoRa transceiver, and sets the transceiver
+ * to receiver mode. If there is data received, it reads the received data, and writes it
+ * to the LORA_READ_AREA of the MemoryManager.
  */
 void LoRaManager::Execute(void){
 

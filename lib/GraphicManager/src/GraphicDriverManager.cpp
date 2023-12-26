@@ -1,13 +1,15 @@
 #include "GraphicDriverManager.h"
-#include "MemoryManager.h"
+#include "memory/MemoryManager.h"
 #include "./Drivers/SSD1306.h"
 
 /**
- * Executes the process of the GraphicDriverManager.
- * This function initializes the SSD1306 driver, reads data from the memory manager,
- * and processes the data using the driver. It runs in an infinite loop with a delay of 100ms between iterations.
+ * @brief Executes the GraphicDriverManager process.
  *
- * @returns None
+ * This function initializes the SSD1306 driver, reads data from the MemoryManager,
+ * and processes the data using the driver. It runs in an infinite loop with a delay
+ * of 150 milliseconds between iterations.
+ *
+ * @return None.
  */
 void GraphicDriverManager::Execute(void)
 {

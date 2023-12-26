@@ -18,10 +18,10 @@ constexpr uint16_t MAXIMUM_MESSAGE_SIZE = 1024;
 
 /**
  * @brief Processes an incoming message by extracting relevant information and validating it.
- * 
+ *
  * @param bytes A pointer to an array of bytes that represents the incoming message.
  * @param size The size of the 'bytes' array, which is the number of elements in the array.
- * 
+ *
  * @return An 'esp_err_t' value, which is a type defined in the ESP-IDF framework.
  */
 esp_err_t SerialProtocol::ProcessIncomingMessage(uint8_t *bytes, size_t size){
@@ -50,9 +50,9 @@ esp_err_t SerialProtocol::ProcessIncomingMessage(uint8_t *bytes, size_t size){
 
 /**
  * @brief Validates an incoming message.
- * 
+ *
  * @param bytes A pointer to an array of bytes that represents the incoming message.
- * 
+ *
  * @return An 'esp_err_t' value, which is a type defined in the ESP-IDF framework.
  */
 esp_err_t SerialProtocol::ValidateIncomingMessage(uint8_t *bytes){
@@ -80,6 +80,19 @@ esp_err_t SerialProtocol::ValidateIncomingMessage(uint8_t *bytes){
     return result;
 }
 
+/**
+ * @brief Generates a response message based on the provided parameters.
+ * 
+ * This function constructs a response message using the given response data, size,
+ * and other information from the incoming message. It sets the start byte, data length,
+ * command, memory area, data pointer, calculates CRC32, and sets the end byte.
+ * 
+ * @param response_data A pointer to an array of bytes representing the response data.
+ * @param size The size of the response data.
+ * @param memory_area The memory area associated with the response message.
+ * 
+ * @return The total size of the generated response message.
+ */
 uint16_t SerialProtocol::GenerateResponseMessage(uint8_t *response_data, uint16_t size, uint8_t memory_area){
     this->sending_message_.start_byte = START_BYTE;
     this->sending_message_.data_length = ConvertBytesToUInt16((uint8_t*)&size);
