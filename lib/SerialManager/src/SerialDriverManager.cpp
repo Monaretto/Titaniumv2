@@ -1,9 +1,9 @@
 #include "SerialDriverManager.h"
-#include "MemoryManager.h"
+#include "memory/MemoryManager.h"
 
 #include "SerialProtocol.h"
 
-#include "GPIOManager.h"
+#include "gpio/GPIOManager.h"
 
 /**
  * Executes the SerialDriverManager.
@@ -25,7 +25,6 @@ void SerialDriverManager::Execute(void)
     uint8_t ACK_OK[5] = {0x41, 0x43, 0x4B, 0x4F, 0x4B};
     uint8_t ACK_NOK[6] = {0x41, 0x43, 0x4B, 0x4E, 0x4F, 0x4B};
 
-    // gpio_manager->WriteGPIO(LED_WHITE, HIGH);
     if (this->Initialize_() != ESP_OK){
         vTaskDelete(this->process_handler);
     }

@@ -1,4 +1,4 @@
-#include "MemoryAreas/src/MemoryAreaSSID.h"
+#include "memory/MemoryAreas/src/MemoryAreaSSID.h"
 
 #include "unity.h"
 #include "freertos/FreeRTOS.h"

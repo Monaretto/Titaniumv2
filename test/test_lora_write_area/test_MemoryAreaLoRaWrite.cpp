@@ -1,4 +1,4 @@
-#include "MemoryAreas/src/MemoryAreaLoRaWrite.h"
+#include "memory/MemoryAreas/src/MemoryAreaLoRaWrite.h"
 
 #include "unity.h"
 #include "freertos/FreeRTOS.h"

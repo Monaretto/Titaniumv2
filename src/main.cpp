@@ -1,8 +1,8 @@
 #include "nvs_flash.h"
 
-#include <MemoryManager.h>
-#include <GPIOManager.h>
-#include <SPIManager.h>
+#include <memory/MemoryManager.h>
+#include <gpio/GPIOManager.h>
+#include <spi/SPIManager.h>
 
 #include <CommandManager.h>
 #include <GraphicDriverManager.h>

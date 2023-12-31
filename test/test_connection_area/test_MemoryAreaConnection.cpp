@@ -1,4 +1,4 @@
-#include "MemoryAreas/src/MemoryAreaConnection.h"
+#include "memory/MemoryAreas/src/MemoryAreaConnection.h"
 
 #include "unity.h"
 #include "freertos/FreeRTOS.h"

@@ -1,7 +1,14 @@
-#include "SPIManager.h"
+#include "spi/SPIManager.h"
 
-#include "GPIOManager.h"
+#include "gpio/GPIOManager.h"
 
+/**
+ * @brief Initializes the SPIManager and configures the SPI bus and device.
+ *
+ * This function initializes the SPIManager by configuring the SPI bus and device parameters.
+ *
+ * @return ESP_OK if initialization is successful, otherwise an error code.
+ */
 esp_err_t SPIManager::Initialize(void){
 
     auto result = ESP_OK;
@@ -29,6 +36,16 @@ esp_err_t SPIManager::Initialize(void){
     return result;
 }
 
+/**
+ * @brief Performs a SPI transaction to transmit and receive data.
+ *
+ * This function performs a SPI transaction to transmit data and receive the response.
+ *
+ * @param[in] transmission_packet Pointer to the data to be transmitted.
+ * @param[out] receive_packet Pointer to the buffer for received data.
+ * @param[in] size Size of the data to be transmitted and received.
+ * @return ESP_OK if the transaction is successful, otherwise an error code.
+ */
 esp_err_t SPIManager::DeviceTransmit(uint8_t* transmission_packet, uint8_t* receive_packet, uint8_t size){
     auto result = ESP_FAIL;
     
@@ -46,9 +63,9 @@ esp_err_t SPIManager::DeviceTransmit(uint8_t* transmission_packet, uint8_t* rece
 }
 
 /**
- * @brief Returns the singleton instance
+ * @brief Returns the singleton instance of SPIManager.
  *
- * @return SPIManager*
+ * @return A pointer to the singleton instance of SPIManager.
  */
 SPIManager *SPIManager::GetInstance(void)
 {

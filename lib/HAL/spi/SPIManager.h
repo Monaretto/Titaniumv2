@@ -1,6 +1,6 @@
 #include "stdint.h"
 
-#include "GPIOManager.h"
+#include "gpio/GPIOManager.h"
 
 #include "esp_err.h"
 #include "driver/spi_master.h"

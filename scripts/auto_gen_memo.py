@@ -19,7 +19,7 @@ def generate_memory_manager(memory_areas, output_path):
 
     cpp_template = template.render(memory_areas=memory_areas)
 
-    with open(os.path.join("lib/MemoryManager/src/", "MemoryManager.cpp"), "w") as file:
+    with open(os.path.join("lib/HAL/memory/", "MemoryManager.cpp"), "w") as file:
         file.write(cpp_template)
 
 def generate_memory_area(memory_area, output_path):
@@ -88,7 +88,7 @@ def import_memory_area_def(filepath):
 def get_arguments():
     parser = argparse.ArgumentParser(description="Generate C++ code for memory areas based on YAML configuration.")
     parser.add_argument("-i", "--input", required=False, help="Path to the YAML configuration file", default="scripts/memory_areas.yaml")
-    parser.add_argument("-o", "--output", help="Output directory for generated C++ files", required=False, default="lib/MemoryManager/src/MemoryAreas/")
+    parser.add_argument("-o", "--output", help="Output directory for generated C++ files", required=False, default="lib/HAL/memory/MemoryAreas/")
 
     return parser.parse_args()
 

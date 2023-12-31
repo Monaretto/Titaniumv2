@@ -1,4 +1,4 @@
-#include "MemoryAreas/src/MemoryAreaPassword.h"
+#include "memory/MemoryAreas/src/MemoryAreaPassword.h"
 
 #include "unity.h"
 #include "freertos/FreeRTOS.h"

@@ -1,5 +1,8 @@
-#include "GPIOManager.h"
+#include "gpio/GPIOManager.h"
 
+/**
+ * @brief Internal structure to store GPIO configuration.
+ */
 gpio_internal_st gpio_internal_list[] = {
     {
         .id = LED_WHITE,
@@ -21,6 +24,14 @@ gpio_internal_st gpio_internal_list[] = {
     },
 };
 
+/**
+ * @brief Initializes the GPIOManager.
+ *
+ * This function initializes the GPIOManager by setting up the GPIO pins according
+ * to the predefined configuration in `gpio_internal_list`.
+ *
+ * @return ESP_OK if initialization is successful, otherwise an error code.
+ */
 esp_err_t GPIOManager::Initialize(void)
 {
     auto result = ESP_OK;
@@ -37,6 +48,16 @@ esp_err_t GPIOManager::Initialize(void)
     return result;
 }
 
+
+/**
+ * @brief Writes the state to the specified GPIO pin.
+ *
+ * This function writes the specified state to the GPIO pin identified by `id`.
+ *
+ * @param id The ID of the GPIO pin.
+ * @param state The state to be written (HIGH or LOW).
+ * @return ESP_OK if writing is successful, otherwise an error code.
+ */
 esp_err_t GPIOManager::WriteGPIO(gpio_id_et id, state_gpio_et state)
 {
     auto result = ESP_FAIL;
@@ -65,6 +86,15 @@ esp_err_t GPIOManager::WriteGPIO(gpio_id_et id, state_gpio_et state)
     return result;
 }
 
+
+/**
+ * @brief Reads the state from the specified GPIO pin.
+ *
+ * This function reads and returns the state of the GPIO pin identified by `id`.
+ *
+ * @param id The ID of the GPIO pin.
+ * @return The state of the GPIO pin (HIGH or LOW), or -1 if an error occurs.
+ */
 uint8_t GPIOManager::ReadGPIO(gpio_id_et id)
 {
     auto result = -1;
@@ -90,6 +120,14 @@ uint8_t GPIOManager::ReadGPIO(gpio_id_et id)
     return result;
 }
 
+/**
+ * @brief Gets the internal GPIO structure for the specified GPIO ID.
+ *
+ * This function retrieves the internal GPIO structure for the specified GPIO ID.
+ *
+ * @param id The ID of the GPIO pin.
+ * @return A pointer to the internal GPIO structure, or nullptr if not found.
+ */
 gpio_internal_st *GPIOManager::GetGPIO_(gpio_id_et id)
 {
     for (uint8_t i = 0; i < this->gpio_array_list_size_; i++)
@@ -104,9 +142,9 @@ gpio_internal_st *GPIOManager::GetGPIO_(gpio_id_et id)
 }
 
 /**
- * @brief Returns the singleton instance
+ * @brief Returns the singleton instance of GPIOManager.
  *
- * @return GPIOManager*
+ * @return A pointer to the singleton instance of GPIOManager.
  */
 GPIOManager *GPIOManager::GetInstance(void)
 {
