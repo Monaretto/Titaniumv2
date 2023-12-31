@@ -5,10 +5,6 @@
 
 #include "GPIOManager.h"
 
-#include "esp_log.h"
-
-static const char *TAG = "Serial Task";
-
 /**
  * Executes the SerialDriverManager.
  *
