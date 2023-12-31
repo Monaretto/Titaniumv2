@@ -5,8 +5,7 @@
 #include "./MemoryAreas/src/MemoryAreaConnection.h"
 #include "./MemoryAreas/src/MemoryAreaLoRaWrite.h"
 #include "./MemoryAreas/src/MemoryAreaLoRaRead.h"
-#include "string.h"
-#include <cstdio>
+
 
 /**
  * Initializes the MemoryManager.
@@ -14,6 +13,7 @@
  * @returns ESP_OK if initialization is successful, otherwise an error code.
  */
 esp_err_t MemoryManager::Initialize(void){
+
     this->memory_area_array[0] = new MemoryAreaDisplay;
     this->memory_area_array[1] = new MemoryAreaSSID;
     this->memory_area_array[2] = new MemoryAreaPassword;
@@ -62,7 +62,7 @@ esp_err_t MemoryManager::Write(area_index_e area_index, uint32_t size, uint8_t *
 
         result = this->memory_area_array[area_index]->Write(pIn, size);
 
-    }while (0);
+    } while (0);
 
     return result;
 }
@@ -97,7 +97,7 @@ esp_err_t MemoryManager::Read(area_index_e area_index, uint16_t *size_pointer, u
         *size_pointer = this->memory_area_array[area_index]->GetSize();
         result = this->memory_area_array[area_index]->Read(pOut);
 
-    }while (0);
+    } while (0);
 
     return result;
 }
@@ -112,11 +112,11 @@ bool MemoryManager::IsAreaDataNew(area_index_e area_index){
  * @return MemoryManager* 
  */
 MemoryManager* MemoryManager::GetInstance(void)
-  {
+{
     if (singleton_pointer_ == nullptr)
     {
-      singleton_pointer_ = new MemoryManager();
+        singleton_pointer_ = new MemoryManager();
     }
 
     return singleton_pointer_;
-  }
+}
