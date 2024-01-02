@@ -8,26 +8,70 @@
 
 esp_err_t RequestHandler(httpd_req_t *req)
 {
-    if (strcmp(req->uri, "/index") == 0){
-        httpd_resp_set_type(req, "text/html");
+    auto memory_manager = MemoryManager::GetInstance();
+
+    if (req->method == HTTP_GET) {
+        if (strcmp(req->uri, "/index") == 0) {
+            httpd_resp_set_type(req, "text/html");
+        }
+        else if (strcmp(req->uri, "/styles.css") == 0) {
+            httpd_resp_set_type(req, "text/css");
+        }
+        else {
+            httpd_resp_set_type(req, "application/json");
+        }
+        
+    }else if ((req->method == HTTP_POST) || (req->method == HTTP_PUT)) {
+
     }
-    else if (strcmp(req->uri, "/styles.css") == 0){
-        httpd_resp_set_type(req, "text/css");
-    }
-    httpd_resp_send(req, (const char *)req->user_ctx, HTTPD_RESP_USE_STRLEN);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // if (strcmp(req->uri, "/index") == 0)
+    // {
+    //     httpd_resp_set_type(req, "text/html");
+    // }
+    // else if (strcmp(req->uri, "/styles.css") == 0)
+    // {
+    //     httpd_resp_set_type(req, "text/css");
+    // }
+    // else
+    // {
+    //     for (uint8_t i = 0; i < AREAS_COUNT; i++)
+    //     {
+    //         if (strcmp(req->uri, http_area_list[i].url) == 0)
+    //         {
+                
+    //         }
+    //     }
+    // }
+    // httpd_resp_send(req, (const char *)req->user_ctx, HTTPD_RESP_USE_STRLEN);
     return ESP_OK;
 }
 
 /**
  * The function 'Execute' runs an infinite loop with a delay of 1000 milliseconds.
  */
-void HTTPManager::Execute(void){
+void HTTPManager::Execute(void)
+{
     uint8_t connection_status = NOT_CONNECTED;
     uint16_t connection_status_size = 0;
-    
+
     this->Initialize_();
-    
-    while(1){
+
+    while (1)
+    {
         this->memory_manager_->Read(CONNECTION_AREA, &connection_status_size, &connection_status);
 
         // if (this->last_status != connection_status){
@@ -48,7 +92,7 @@ void HTTPManager::Execute(void){
 /**
  * The function initializes the HTTPManager by reading files from SPIFFS and initializing the request
  * list.
- * 
+ *
  * @return an 'esp_err_t' value.
  */
 esp_err_t HTTPManager::Initialize_(void)
@@ -64,13 +108,13 @@ esp_err_t HTTPManager::Initialize_(void)
     return result;
 }
 
-
 /**
  * The function starts an HTTP server and registers handlers.
- * 
+ *
  * @return an `esp_err_t` value.
  */
-esp_err_t HTTPManager::StartHTTPServer_(void){
+esp_err_t HTTPManager::StartHTTPServer_(void)
+{
     auto result = ESP_OK;
 
     if (httpd_start(&this->server_, &this->config_) == ESP_OK)
@@ -83,10 +127,11 @@ esp_err_t HTTPManager::StartHTTPServer_(void){
 
 /**
  * The function `StopHTTPServer` stops the HTTP server.
- * 
+ *
  * @return an esp_err_t, which is a type defined in the ESP-IDF framework for error handling.
  */
-esp_err_t HTTPManager::StopHTTPServer_(void){
+esp_err_t HTTPManager::StopHTTPServer_(void)
+{
 
     return httpd_stop(&this->server_);
 }
@@ -95,10 +140,11 @@ esp_err_t HTTPManager::StopHTTPServer_(void){
  * The function InitializeRequestList_ initializes a list of HTTP request URIs and their corresponding
  * handlers.
  */
-void HTTPManager::InitializeRequestList_(void){
+void HTTPManager::InitializeRequestList_(void)
+{
 
-    RequestData request_index((char*)"text/html", this->html_page_);
-    RequestData request_css((char*)"text/css", this->css_styles_);
+    // RequestData request_index((char *)"text/html", this->html_page_);
+    // RequestData request_css((char *)"text/css", this->css_styles_);
 
     httpd_uri_t uri_get_index = {
         .uri = "/index",
@@ -122,18 +168,19 @@ void HTTPManager::InitializeRequestList_(void){
  * The function 'ReadFilesFromSPIFFS_' reads the contents of two files ('index.html' and 'styles.css')
  * from the SPIFFS file system and stores them in the 'html_page_' and 'css_styles_' variables
  * respectively.
- * 
+ *
  * @return an esp_err_t, which is a type defined in the ESP-IDF framework for error handling.
  */
-esp_err_t HTTPManager::ReadFilesFromSPIFFS_(void){
+esp_err_t HTTPManager::ReadFilesFromSPIFFS_(void)
+{
     auto result = ESP_OK;
     auto file_system_manager = FileSystemManager::GetInstance();
 
     memset_s(this->html_page_, 0, sizeof(this->html_page_));
     memset_s(this->css_styles_, 0, sizeof(this->css_styles_));
 
-    result += file_system_manager->ReadFile((char*)"/spiffs/WebServer/index.html", this->html_page_, sizeof(this->html_page_));
-    result += file_system_manager->ReadFile((char*)"/spiffs/WebServer/styles.css", this->css_styles_, sizeof(this->css_styles_));
+    result += file_system_manager->ReadFile((char *)"/spiffs/WebServer/index.html", this->html_page_, sizeof(this->html_page_));
+    // result += file_system_manager->ReadFile((char *)"/spiffs/WebServer/styles.css", this->css_styles_, sizeof(this->css_styles_));
 
     return result;
 }
@@ -141,13 +188,15 @@ esp_err_t HTTPManager::ReadFilesFromSPIFFS_(void){
 /**
  * The function iterates through a list of HTTP request handlers and registers them with an HTTP
  * server.
- * 
+ *
  * @return an 'esp_err_t' value.
  */
-esp_err_t HTTPManager::RegisterHandlers_(void){
+esp_err_t HTTPManager::RegisterHandlers_(void)
+{
     auto result = ESP_OK;
 
-    for (int i = 0; i < this->maximum_requests_list_size; i++){
+    for (int i = 0; i < this->maximum_requests_list_size; i++)
+    {
         result += httpd_register_uri_handler(this->server_, &this->http_requests_list_[i]);
     }
 

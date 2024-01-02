@@ -15,7 +15,7 @@ constexpr uint8_t CONNECTED = 1;
  */
 class HTTPManager : public ProcessTemplate{
     public:
-    HTTPManager() : ProcessTemplate(this, "HTTP Proccess", 1024, 1, &this->process_handler) { };
+    HTTPManager() : ProcessTemplate(this, "HTTP Proccess", 10240, 1, &this->process_handler) { };
     
     public:
     void Execute(void);

@@ -1,12 +1,15 @@
 #include "NetworkManager.h"
 #include "memory/MemoryManager.h"
-#include "esp_system.h"
+#include "MemoryUtils.h"
 
+#include "esp_system.h"
 #include "esp_event.h"
 #include "esp_log.h"
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
+
+static const char *TAG = "WiFiManager";
 
 static void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
@@ -40,31 +43,38 @@ static void event_handler(void* arg, esp_event_base_t event_base,
  */
 esp_err_t NetworkManager::Initialize_(void){
     esp_err_t result = ESP_OK;
-    auto memory_manager = MemoryManager::GetInstance();
+    // auto memory_manager = MemoryManager::GetInstance();
 
-    result += esp_netif_init();
-    result += esp_event_loop_create_default();
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
     this->esp_netif_pointer_ = esp_netif_create_default_wifi_sta();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    result += esp_wifi_init(&cfg);
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-    printf("Wifi Status %d Result End\n", result);
-    result += this->RegisterWiFiEvents_();
+    ESP_ERROR_CHECK(this->RegisterWiFiEvents_());
 
-    wifi_config_t wifi_config;
-    uint16_t size_ssid = 0;
-    uint16_t size_password = 0;
+    wifi_config_t wifi_config = {0};
+    // uint16_t size_ssid = 0;
+    // uint16_t size_password = 0;
+
+    const char SSID_AP[8] = "Lika";
+    const char PASSWORD_AP[9] = "gvt88888";
+
+    memcpy_s(wifi_config.sta.ssid, (uint8_t*)SSID_AP, sizeof(SSID_AP));
+    memcpy_s(wifi_config.sta.password, (uint8_t*)PASSWORD_AP, sizeof(PASSWORD_AP));
+
+    // memory_manager->Read(SSID_AREA, &size_ssid, wifi_config.sta.ssid);
+    // memory_manager->Read(PASSWORD_AREA, &size_password, wifi_config.sta.password);
     
-    memory_manager->Read(SSID_AREA, &size_ssid, wifi_config.sta.ssid);
-    memory_manager->Read(PASSWORD_AREA, &size_password, wifi_config.sta.password);
     wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
     wifi_config.sta.pmf_cfg.capable = true;
     wifi_config.sta.pmf_cfg.required = false;
 
-    result += esp_wifi_set_mode(WIFI_MODE_STA);
-    result += esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
-    result += esp_wifi_start();
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+    // ESP_ERROR_CHECK(result);
     return result;
 }
 
