@@ -5,28 +5,50 @@
 #include "esp_event.h"
 #include "esp_log.h"
 
+#include "lwip/sockets.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-static void event_handler(void* arg, esp_event_base_t event_base,
-                                int32_t event_id, void* event_data)
+namespace AP {
+    constexpr char*            ssid = "Titanium";
+    constexpr char*            password = "root1234";
+    constexpr uint8_t          channel = 1;
+    constexpr uint8_t          visibility = 0;
+    constexpr uint8_t          max_connections = 0;
+    constexpr char*            ip = "192.168.0.1";
+    constexpr char*            gw = "192.168.0.1";
+    constexpr char*            netmask = "255.255.255.0";
+    constexpr uint8_t          beacon_interval = 100;
+    constexpr wifi_bandwidth_t bw = WIFI_BW_HT20;
+    constexpr wifi_ps_type_t   power_save = WIFI_PS_NONE;
+}
+
+namespace STA {
+    constexpr uint8_t ssid_max_lenght = 32;
+    constexpr uint8_t password_max_lenght = 64;
+    constexpr uint8_t max_retries = 5;
+}
+
+static void WiFiAppEventHandler(void* arg, esp_event_base_t event_base,
+                                    int32_t event_id, void* event_data)
 {
-    if ((event_base != WIFI_EVENT) && (event_base != IP_EVENT))
-        return;
-
-    NetworkManager * network_pointer_object = static_cast<NetworkManager *>(arg);
-
-    switch (event_id){
-        case WIFI_EVENT_STA_START:
-        case WIFI_EVENT_STA_DISCONNECTED:
-            network_pointer_object->SetWiFiConnection_(false);
-            network_pointer_object->result = esp_wifi_connect();
-        break;
+    if (event_base == WIFI_EVENT){
+        switch (event_id){
+            case WIFI_EVENT_AP_START:
+            case WIFI_EVENT_AP_STOP:
+            case WIFI_EVENT_AP_STACONNECTED:
+            case WIFI_EVENT_AP_STADISCONNECTED:
+            case WIFI_EVENT_STA_START:
+            case WIFI_EVENT_STA_CONNECTED:
+            case WIFI_EVENT_STA_DISCONNECTED:
+                break;
+        }
+    }
+    else if (event_base == IP_EVENT){
+        switch (event_id) {
         case IP_EVENT_STA_GOT_IP:
-            network_pointer_object->SetWiFiConnection_(true);
-        break;
-        default:
-        break;
+            break;
+        }
     }
 }
 
@@ -38,32 +60,31 @@ static void event_handler(void* arg, esp_event_base_t event_base,
  *
  * @return An `esp_err_t` value, which is the result of the initialization process.
  */
-esp_err_t NetworkManager::Initialize_(void){
+esp_err_t NetworkManager::Initialize(void){
     esp_err_t result = ESP_OK;
-    auto memory_manager = MemoryManager::GetInstance();
+    this->_memory_manager = MemoryManager::GetInstance();
 
-    memory_manager->Read(CREDENTIALS_AREA, &this->cred_area_);
-
+    result += this->RegisterWiFiEvents();
     result += esp_netif_init();
-    result += esp_event_loop_create_default();
-    this->esp_netif_pointer_ = esp_netif_create_default_wifi_sta();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     result += esp_wifi_init(&cfg);
+    result += esp_wifi_set_storage(WIFI_STORAGE_RAM);
 
-    result += this->RegisterWiFiEvents_();
+    this->_esp_netif_sta = esp_netif_create_default_wifi_sta();
+    this->_esp_netif_ap  = esp_netif_create_default_wifi_ap();
 
     wifi_config_t wifi_config;
 
-    memcpy_s(wifi_config.sta.ssid, this->cred_area_.sta_ssid, sizeof(wifi_config.sta.ssid));  
-    memcpy_s(wifi_config.sta.password, this->cred_area_.sta_password, sizeof(wifi_config.sta.password));  
+    result += this->SetAccessPointMode(wifi_config);
+    // this->SetStationMode(wifi_config);
+    // this->SetCredentials(wifi_config);
+    // wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+    // wifi_config.sta.pmf_cfg.capable = true;
+    // wifi_config.sta.pmf_cfg.required = false;
 
-    wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
-    wifi_config.sta.pmf_cfg.capable = true;
-    wifi_config.sta.pmf_cfg.required = false;
-
-    result += esp_wifi_set_mode(WIFI_MODE_STA);
-    result += esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+    // result += esp_wifi_set_mode(WIFI_MODE_APSTA);
+    // result += esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config);
     result += esp_wifi_start();
     return result;
 }
@@ -77,8 +98,8 @@ esp_err_t NetworkManager::Initialize_(void){
 void NetworkManager::Execute(void){
     auto memory_manager = MemoryManager::GetInstance();
 
-    if (this->Initialize_() != ESP_OK){
-        vTaskDelete(this->process_handler_);
+    if (this->Initialize() != ESP_OK){
+        vTaskDelete(this->_process_handler);
     }
 
     while(1){
@@ -94,20 +115,22 @@ void NetworkManager::Execute(void){
  *
  * @return An `esp_err_t`, which is a type defined in the ESP-IDF framework for error handling.
  */
-esp_err_t NetworkManager::RegisterWiFiEvents_(void){
+esp_err_t NetworkManager::RegisterWiFiEvents(void){
     esp_err_t result = ESP_OK;
+
+    result += esp_event_loop_create_default();
 
     result += esp_event_handler_instance_register(
                                         WIFI_EVENT,
                                         ESP_EVENT_ANY_ID,
-                                        &event_handler,
+                                        &WiFiAppEventHandler,
                                         this,
                                         nullptr);
 
     result += esp_event_handler_instance_register(
                                         IP_EVENT,
-                                        IP_EVENT_STA_GOT_IP,
-                                        &event_handler,
+                                        ESP_EVENT_ANY_ID,
+                                        &WiFiAppEventHandler,
                                         this,
                                         nullptr);
 
@@ -124,3 +147,53 @@ esp_err_t NetworkManager::RegisterWiFiEvents_(void){
 void NetworkManager::SetWiFiConnection_(uint8_t status){
     this->connection_area_.connection_status = status;
 }
+
+esp_err_t NetworkManager::SetStationMode(wifi_config_t& wifi_config){
+    auto result = ESP_OK;
+
+   this->SetCredentials(wifi_config);
+
+    wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+    wifi_config.sta.pmf_cfg.capable = true;
+    wifi_config.sta.pmf_cfg.required = false;
+
+    return result;
+}
+
+esp_err_t NetworkManager::SetAccessPointMode(wifi_config_t& ap_config){
+    auto result = ESP_OK;
+
+    memcpy_s(ap_config.ap.ssid, reinterpret_cast<uint8_t*>(AP::ssid), strlen(AP::ssid));  
+    memcpy_s(ap_config.ap.password, reinterpret_cast<uint8_t*>(AP::password), strlen(AP::password));
+
+    ap_config.ap.ssid_len        = strlen(AP::ssid);  
+    ap_config.ap.channel         = AP::channel;  
+    ap_config.ap.ssid_hidden     = AP::visibility;  
+    ap_config.ap.authmode        = WIFI_AUTH_WPA2_PSK;
+    ap_config.ap.max_connection  = AP::max_connections;
+    ap_config.ap.beacon_interval = AP::beacon_interval;
+
+    esp_netif_ip_info_t ap_ip_info{0};
+
+    esp_netif_dhcps_stop(this->_esp_netif_ap);
+    inet_pton(AF_INET, AP::ip, &ap_ip_info.ip);
+    inet_pton(AF_INET, AP::gw, &ap_ip_info.gw);
+    inet_pton(AF_INET, AP::netmask, &ap_ip_info.netmask);
+
+    result += esp_netif_set_ip_info(this->_esp_netif_ap, &ap_ip_info);
+    result += esp_netif_dhcps_start(this->_esp_netif_ap);
+    result += esp_wifi_set_mode(WIFI_MODE_APSTA);
+    result += esp_wifi_set_config(WIFI_IF_AP, &ap_config);
+    result += esp_wifi_set_bandwidth(WIFI_IF_AP, AP::bw);
+    result += esp_wifi_set_ps(AP::power_save);
+
+    return result;
+}
+
+void NetworkManager::SetCredentials(wifi_config_t& wifi_config){
+    this->_memory_manager->Read(CREDENTIALS_AREA, this->_cred_area);
+
+    memcpy_s(wifi_config.sta.ssid, this->_cred_area.raw_data.sta_ssid, sizeof(wifi_config.sta.ssid));  
+    memcpy_s(wifi_config.sta.password, this->_cred_area.raw_data.sta_password, sizeof(wifi_config.sta.password));  
+}
+
