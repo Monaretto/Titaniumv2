@@ -10,23 +10,23 @@
 #include "lwip/sys.h"
 
 namespace AP {
-    constexpr char*            ssid = "Titanium";
-    constexpr char*            password = "root1234";
-    constexpr uint8_t          channel = 1;
-    constexpr uint8_t          visibility = 0;
-    constexpr uint8_t          max_connections = 0;
-    constexpr char*            ip = "192.168.0.1";
-    constexpr char*            gw = "192.168.0.1";
-    constexpr char*            netmask = "255.255.255.0";
-    constexpr uint8_t          beacon_interval = 100;
-    constexpr wifi_bandwidth_t bw = WIFI_BW_HT20;
-    constexpr wifi_ps_type_t   power_save = WIFI_PS_NONE;
+    const uint8_t          ssid[] = "Titanium";
+    const uint8_t          password[] = "root1234";
+    const uint8_t          channel = 1;
+    const uint8_t          visibility = 0;
+    const uint8_t          max_connections = 1;
+    const char*            ip = "192.168.0.1";
+    const char*            gw = "192.168.0.1";
+    const char*            netmask = "255.255.255.0";
+    const uint8_t          beacon_interval = 100;
+    const wifi_bandwidth_t bw = WIFI_BW_HT20;
+    const wifi_ps_type_t   power_save = WIFI_PS_NONE;
 }
 
 namespace STA {
-    constexpr uint8_t ssid_max_lenght = 32;
-    constexpr uint8_t password_max_lenght = 64;
-    constexpr uint8_t max_retries = 5;
+    const uint8_t ssid_max_lenght = 32;
+    const uint8_t password_max_lenght = 64;
+    const uint8_t max_retries = 5;
 }
 
 static void WiFiAppEventHandler(void* arg, esp_event_base_t event_base,
@@ -103,7 +103,7 @@ void NetworkManager::Execute(void){
     }
 
     while(1){
-        memory_manager->Write(CONNECTION_AREA, sizeof(this->connection_area_), &this->connection_area_);
+        memory_manager->Write(CONNECTION_AREA, sizeof(this->_connection_area), &this->_connection_area);
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -144,8 +144,8 @@ esp_err_t NetworkManager::RegisterWiFiEvents(void){
  *
  * @param status A boolean value that represents the desired connection status of the WiFi network.
  */
-void NetworkManager::SetWiFiConnection_(uint8_t status){
-    this->connection_area_.connection_status = status;
+void NetworkManager::SetWiFiConnection(uint8_t status){
+    this->_connection_area.connection_status = status;
 }
 
 esp_err_t NetworkManager::SetStationMode(wifi_config_t& wifi_config){
@@ -163,17 +163,18 @@ esp_err_t NetworkManager::SetStationMode(wifi_config_t& wifi_config){
 esp_err_t NetworkManager::SetAccessPointMode(wifi_config_t& ap_config){
     auto result = ESP_OK;
 
-    memcpy_s(ap_config.ap.ssid, reinterpret_cast<uint8_t*>(AP::ssid), strlen(AP::ssid));  
-    memcpy_s(ap_config.ap.password, reinterpret_cast<uint8_t*>(AP::password), strlen(AP::password));
+    memcpy_s(ap_config.ap.ssid, const_cast<uint8_t*>(AP::ssid), sizeof(AP::ssid));  
+    memcpy_s(ap_config.ap.password, const_cast<uint8_t*>(AP::password), sizeof(AP::password));
 
-    ap_config.ap.ssid_len        = strlen(AP::ssid);  
+    ap_config.ap.ssid_len        = sizeof(AP::ssid);  
     ap_config.ap.channel         = AP::channel;  
     ap_config.ap.ssid_hidden     = AP::visibility;  
     ap_config.ap.authmode        = WIFI_AUTH_WPA2_PSK;
     ap_config.ap.max_connection  = AP::max_connections;
     ap_config.ap.beacon_interval = AP::beacon_interval;
 
-    esp_netif_ip_info_t ap_ip_info{0};
+    esp_netif_ip_info_t ap_ip_info;
+    memset_s(reinterpret_cast<uint8_t*>(&ap_ip_info), 0, sizeof(esp_netif_ip_info_t));
 
     esp_netif_dhcps_stop(this->_esp_netif_ap);
     inet_pton(AF_INET, AP::ip, &ap_ip_info.ip);
@@ -191,9 +192,9 @@ esp_err_t NetworkManager::SetAccessPointMode(wifi_config_t& ap_config){
 }
 
 void NetworkManager::SetCredentials(wifi_config_t& wifi_config){
-    this->_memory_manager->Read(CREDENTIALS_AREA, this->_cred_area);
+    this->_memory_manager->Read(CREDENTIALS_AREA, &this->_cred_area);
 
-    memcpy_s(wifi_config.sta.ssid, this->_cred_area.raw_data.sta_ssid, sizeof(wifi_config.sta.ssid));  
-    memcpy_s(wifi_config.sta.password, this->_cred_area.raw_data.sta_password, sizeof(wifi_config.sta.password));  
+    memcpy_s(wifi_config.sta.ssid, this->_cred_area.sta_ssid, sizeof(wifi_config.sta.ssid));  
+    memcpy_s(wifi_config.sta.password, this->_cred_area.sta_password, sizeof(wifi_config.sta.password));  
 }
 

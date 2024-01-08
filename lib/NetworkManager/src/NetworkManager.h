@@ -2,7 +2,7 @@
 #define NETWORK_MANAGER_GUARD
 
 #include "ProcessTemplate.h"
-#include "memory/MemoryManager.h"
+#include "memory/MemoryManager.hpp"
 #include "memory/AreaDefinitions/CredentialsArea.h"
 #include "memory/AreaDefinitions/ConnectionArea.h"
 
@@ -26,13 +26,12 @@ class NetworkManager : public ProcessTemplate{
     void      SetCredentials(wifi_config_t& wifi_config);
 
     private:
-    uint8_t connected_ = 0;
     MemoryManager* _memory_manager = nullptr;
     esp_netif_t*   _esp_netif_ap = nullptr;
     esp_netif_t*   _esp_netif_sta = nullptr;
     TaskHandle_t   _process_handler = nullptr;
-    credentials_st cred_area_;
-    connection_st connection_area_;
+    credentials_st _cred_area;
+    connection_st  _connection_area;
 };
 
 #endif /* NETWORK_MANAGER_GUARD */
