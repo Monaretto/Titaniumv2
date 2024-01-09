@@ -10,7 +10,7 @@
 #include "esp_err.h"
 
 /**
- * A class that manages the graphic driver process.
+ * @brief NetworkManager class for handling Wi-Fi configuration and events.
  */
 class NetworkManager : public ProcessTemplate{
     public:
@@ -20,10 +20,9 @@ class NetworkManager : public ProcessTemplate{
     private:
     esp_err_t Initialize(void);
     esp_err_t RegisterWiFiEvents(void);
-    esp_err_t SetStationMode(wifi_config_t& wifi_config);
-    esp_err_t SetAccessPointMode(wifi_config_t& wifi_config);
-    void      SetWiFiConnection(uint8_t status);
-    void      SetCredentials(wifi_config_t& wifi_config);
+    esp_err_t SetStationMode(wifi_config_t* sta_config);
+    esp_err_t SetAccessPointMode(wifi_config_t* ap_config);
+    void      SetCredentials(wifi_config_t* wifi_config);
 
     private:
     MemoryManager* _memory_manager = nullptr;
